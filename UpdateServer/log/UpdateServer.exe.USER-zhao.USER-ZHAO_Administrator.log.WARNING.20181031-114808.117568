@@ -1,9 +1,0 @@
-Log file created at: 2018/10/31 11:48:08
-Running on machine: USER-zhao
-Binary: Built with gc go1.11.1 for windows/amd64
-Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
-E1031 11:48:08.938759  117568 main.go:20] updateserver start！
-E1031 11:49:02.100800  117568 handlers.go:21] updateserver 启动页
-E1031 11:49:30.151404  117568 handlers.go:21] updateserver 启动页
-E1031 11:51:30.048262  117568 handlers.go:21] updateserver 启动页
-E1031 11:53:29.441091  117568 handlers.go:21] updateserver 启动页

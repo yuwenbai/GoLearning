@@ -1,5 +1,0 @@
-Log file created at: 2018/11/05 18:44:14
-Running on machine: USER-zhao
-Binary: Built with gc go1.11.1 for windows/amd64
-Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
-E1105 18:44:14.669606  155160 main.go:24] updateserver start！
