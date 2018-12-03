@@ -1,0 +1,25 @@
+NSString *path = @"http://apis.juhe.cn/mobile/get?phone=13301388888&key=4e602dad4a05b4d491ffb82511613158";
+//如果网址中出现了 中文 需要进行URL编码
+    path = [path stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
+ 
+    NSURL *url = [NSURL URLWithString:path];
+    //创建请求
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+    //创建网络会话对象
+    NSURLSession *session = [NSURLSession sharedSession];
+    //创建数据任务  系统会自动开启一个子线程  
+    NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        //data为服务器返回的数据
+//        NSString *string = [[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding];
+//        NSLog(@"%@",string);
+ 
+        //把服务器返回的json数据 直接转成字典
+        NSDictionary *dic = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+        NSDictionary *resultDic = dic[@"result"];
+        NSString *province = resultDic[@"province"];
+        NSString *city = resultDic[@"city"];
+        NSString *company = resultDic[@"company"];
+        NSLog(@"%@省 %@市  %@",province,city,company);
+    }];
+    //开始任务
+    [dataTask resume];
