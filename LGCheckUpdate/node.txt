@@ -25,3 +25,21 @@ NSString *path = @"http://apis.juhe.cn/mobile/get?phone=13301388888&key=4e602dad
     [dataTask resume];
 
 	http://192.168.1.184:8080/CheckUpdateInfoJson?name=bo-android&version=1
+	//  对外提供调用方法,演示Promise使用
+RCT_REMAP_METHOD(testPromiseEvent,
+                 resolver:(RCTPromiseResolveBlock)resolve
+                 rejecter:(RCTPromiseRejectBlock)reject)
+{
+    NSArray *events =@[@"Promise ",@"test ",@" array"];
+    if (events) {
+        resolve(events);
+    } else {
+        NSError *error=[NSError errorWithDomain:@"我是Promise回调错误信息..." code:101 userInfo:nil];
+        reject(@"no_events", @"There were no events", error);
+    }
+}
+
+作者：朱_源浩
+链接：https://www.jianshu.com/p/9d7dbf17daa5
+來源：简书
+简书著作权归作者所有，任何形式的转载都请联系作者获得授权并注明出处。
