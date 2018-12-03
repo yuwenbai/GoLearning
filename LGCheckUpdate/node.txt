@@ -23,3 +23,5 @@ NSString *path = @"http://apis.juhe.cn/mobile/get?phone=13301388888&key=4e602dad
     }];
     //开始任务
     [dataTask resume];
+
+	http://192.168.1.184:8080/CheckUpdateInfoJson?name=bo-android&version=1
