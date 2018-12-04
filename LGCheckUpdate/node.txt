@@ -44,3 +44,5 @@ RCT_REMAP_METHOD(testPromiseEvent,
 #elif defined(__i386__)
 #define PC_FROM_UCONTEXT uc_mcontext->__ss.__eip
 #endif
+
+itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/yuwenbai/GoLearning/master/test.plist
