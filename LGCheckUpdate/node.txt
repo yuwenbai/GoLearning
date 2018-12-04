@@ -46,3 +46,11 @@ RCT_REMAP_METHOD(testPromiseEvent,
 #endif
 
 itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/yuwenbai/GoLearning/master/test.plist
+
+ [SYNetworkHelper getWithUrlString:@"url" parameters:@"参数" success:^(NSDictionary *data) {
+    //成功回调,data是成功反馈的数据
+  } failure:^(NSError *error) {
+    //失败,error是错误信息
+  }]
+
+  
