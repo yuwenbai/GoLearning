@@ -11,7 +11,7 @@
 					<key>kind</key>
 					<string>software-package</string>
 					<key>url</key>
-					<string>http://xxxxxxxxxxxxxxxxxxx/xxx.ipa</string>
+					<string>https://192.168.1.169:8080/static/versions/bo-ios/24.ipa</string>
 				</dict>
 				<dict>
 					<key>kind</key>
