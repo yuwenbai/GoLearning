@@ -310,18 +310,23 @@ func CheckUpdateInfoJSON(w http.ResponseWriter, r *http.Request) {
 					}
 				} else {
 					var needUpdate = false
+					fmt.Println(VersionID)
 					if singleton.Instance().AppIsIos(apkName[0]) {
+						fmt.Println(VersionID)
 						//有更新
 						if len(array) > 0 && strings.Compare(VersionID, version[0]) > 0 {
 							needUpdate = true
+							fmt.Println(VersionID)
 						}
 					}
+					fmt.Println(VersionID)
 					//查找文件获取文件信息
 					pwd, _ := os.Getwd()
 					patch := pwd + string(os.PathSeparator) + constantPathPatch
 					newPathName := patch + apkName[0] + string(os.PathSeparator) + version[0] + ".patch"
 					fileInfo, err := os.Stat(newPathName)
 					if needUpdate == true || err != nil { //强制更新 完整包
+						fmt.Println(VersionID)
 						// localfile := pwd + string(os.PathSeparator) + constantPathVersions + apkName[0] + string(os.PathSeparator) + versionid + ".apk"
 						localfile := pwd + string(os.PathSeparator) + constantPathVersions + appName
 						fileInfo, err := os.Stat(localfile)

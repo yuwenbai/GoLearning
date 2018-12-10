@@ -25,6 +25,6 @@ func main() {
 
 	router := NewRouter()
 
-	// utillog.Instance().Fatal(http.ListenAndServe(":8080", router))
-	utillog.Instance().Fatal(http.ListenAndServeTLS(":8080", "cert.pem", "key.pem", router))
+	utillog.Instance().Fatal(http.ListenAndServe(":8080", router))
+	// utillog.Instance().Fatal(http.ListenAndServeTLS(":8080", "cert.pem", "key.pem", router))
 }
