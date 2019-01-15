@@ -11,11 +11,7 @@
 					<key>kind</key>
 					<string>software-package</string>
 					<key>url</key>
-<<<<<<< HEAD
-					<string>https://52.196.195.242:80/static/versions/bo-ios/111.ipa</string>
-=======
-					<string>https://192.168.1.107:9001/static/versions/bo-ios/androidxbk.ipa</string>
->>>>>>> 701ccc7defdd41e962f9d7fcdb7921b0f3b23b18
+					<string>https://192.168.1.107:9001/static/versions/bo-ios/2.ipa</string>
 				</dict>
 				<dict>
 					<key>kind</key>
