@@ -15,13 +15,9 @@ type contextHook struct {
 	levels []logrus.Level
 }
 
-// func newLfsHook(logLevel *string, maxRemainCnt uint) logrus.Hook {
-
-// }
-
 // NewContextHook use to make an hook
 // 根据上面的推断, 我们递归深度可以设置到5即可.
-func NewContextHook(aa int, levels ...logrus.Level) logrus.Hook {
+func NewContextHook(levels ...logrus.Level) logrus.Hook {
 	hook := contextHook{
 		Field:  "line",
 		Skip:   5,

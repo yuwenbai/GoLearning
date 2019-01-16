@@ -11,15 +11,15 @@ import (
 
 //UpdateVersion 版本更新相关信息
 type UpdateVersion struct {
-	APPName     string
-	VersionID   string
-	VersionName string
-	VersionInfo string
-	VersionTime string
+	Apk_name     string
+	Version_id   string
+	Version_name string
+	Version_info string
+	Version_time string
 }
 
 //InsertRecord 插入记录
-func InsertRecord(ApkName, VersionID, VersionName, VersionInfo, PackageType string) bool {
+func InsertRecord(ApkName, VersionID, VersionName, VersionInfo string) bool {
 
 	var connString, err = GenerateConnectSQLDB()
 	if err != nil {
@@ -32,7 +32,7 @@ func InsertRecord(ApkName, VersionID, VersionName, VersionInfo, PackageType stri
 	}
 	defer conn.Close()
 
-	cmd := fmt.Sprintf("INSERT INTO %s (ApkName, VersionID, VersionName, VersionInfo, CreatedOn) VALUES ('%s',  '%s', '%s', '%s', '%s')", "dbo.UpdateServerDB_Version", ApkName, VersionID, VersionName, VersionInfo, time.Now().Format("2006-01-02 15:04:05"))
+	cmd := fmt.Sprintf("INSERT INTO %s (ApkName, VersionId, VersionName, VersionInfo, CreatedOn) VALUES ('%s',  '%s', '%s', '%s', '%s')", "dbo.UpdateServerDB_Version", ApkName, VersionID, VersionName, VersionInfo, time.Now().Format("2006-01-02 15:04:05"))
 	err = exeSQL(conn, cmd)
 	if err != nil {
 		utillog.Instance().Fatal(err.Error())
@@ -137,12 +137,13 @@ func UpdateRecord(apkName string) ([]*UpdateVersion, bool) {
 	}
 	defer conn.Close()
 
-	cmd := fmt.Sprintf("SELECT * FROM %s where ApkName='%s' ORDER BY right ('0000000000'+VersionID,10) desc", "dbo.UpdateServerDB_Version", apkName)
+	cmd := fmt.Sprintf("SELECT * FROM %s where ApkName='%s' ORDER BY VersionId desc", "dbo.UpdateServerDB_Version", apkName)
 	var sqlArray, err1 = exeUpdateSQL(conn, cmd)
 	if err1 != nil {
 		utillog.Instance().Fatal("failed:", err1.Error())
 		return nil, false
 	}
+	fmt.Println(sqlArray)
 	return sqlArray, true
 }
 
@@ -228,10 +229,40 @@ func exeUpdateSQL(db *sql.DB, cmd string) ([]*UpdateVersion, error) {
 	//遍历每一行
 	for rows.Next() {
 		var row = new(UpdateVersion)
-		rows.Scan(&row.APPName, &row.VersionID, &row.VersionName, &row.VersionInfo, &row.VersionTime)
+		rows.Scan(&row.Apk_name, &row.Version_id, &row.Version_name, &row.Version_info, &row.Version_time)
 		retRowData = append(retRowData, row)
 	}
+	// cols, err := rows.Columns()
+	// if err != nil {
+	// 	return err
+	// }
+	// if cols == nil {
+	// 	return nil
+	// }
+	// vals := make([]interface{}, len(cols))
+	// for i := 0; i < len(cols); i++ {
+	// 	vals[i] = new(interface{})
+	// 	if i != 0 {
+	// 		fmt.Print("\t")
+	// 	}
+	// 	fmt.Print(cols[i])
+	// }
+	// fmt.Println()
+	// for rows.Next() {
+	// 	err = rows.Scan(vals...)
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 		continue
+	// 	}
+	// 	for i := 0; i < len(vals); i++ {
+	// 		if i != 0 {
+	// 			fmt.Print("\t")
+	// 		}
+	// 		printValue(vals[i].(*interface{}))
+	// 	}
+	// 	fmt.Println()
 
+	// }
 	if rows.Err() != nil {
 		return retRowData, rows.Err()
 	}

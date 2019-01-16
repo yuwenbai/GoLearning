@@ -1,5 +1,7 @@
 package singleton
 
+import testins "../testins"
+
 var _self *Singleton
 
 //Singleton 类型定义
@@ -19,25 +21,11 @@ func Instance() *Singleton {
 //SetMaintenanceStatus 全局维护状态
 func (o *Singleton) SetMaintenanceStatus(s bool) {
 	_self.maintenance = s
+	testins.TestF(20)
+
 }
 
 //GetMaintenanceStatus 获取维护状态
 func (o *Singleton) GetMaintenanceStatus() bool {
 	return _self.maintenance
-}
-
-//GetPackageFullName 全局获取包名
-func (o *Singleton) GetPackageFullName(appName, versionID string) string {
-	if appName == "bo-ios" {
-		return appName + "/" + versionID + ".ipa"
-	}
-	return appName + "/" + versionID + ".apk"
-}
-
-//AppIsIos 判断是否ios
-func (o *Singleton) AppIsIos(appName string) bool {
-	if appName == "bo-ios" {
-		return true
-	}
-	return false
 }

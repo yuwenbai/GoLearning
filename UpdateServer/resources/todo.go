@@ -12,7 +12,7 @@ type Todos []Todo
 
 //UpdateInfo 信息实例
 type UpdateInfo struct {
-	VersionID   string `json:"VersionID"`
+	VersionId   string `json:"VersionId"`
 	VersionName string `json:"VersionName"`
 	VersionInfo string `json:"VersionInfo"`
 	FileSize    int64  `json:"FileSize"`

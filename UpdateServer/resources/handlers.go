@@ -6,10 +6,8 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
 	"./singleton"
@@ -52,15 +50,13 @@ func GetAllPackageNames(w http.ResponseWriter, r *http.Request) {
 
 //GetCurrentVersion 获取版本
 func GetCurrentVersion(w http.ResponseWriter, r *http.Request) {
+	// vars := mux.Vars(r)
+	// todoId := vars["todoId"]
 	r.ParseForm()
 	apkName := r.Form["apkName"]
 	var array, ret = UpdateRecord(apkName[0])
-	fmt.Println(array)
-	for _, item := range array {
-		fmt.Println(item)
-	}
 	if len(array) > 0 && true == ret {
-		info := UpdateInfo{NeedInstall: true, VersionID: array[0].VersionID, VersionName: array[0].VersionName, VersionInfo: array[0].VersionInfo, FileSize: 0, FileName: ""}
+		info := UpdateInfo{NeedInstall: true, VersionId: array[0].Version_id, VersionName: array[0].Version_name, VersionInfo: array[0].Version_info, FileSize: 0, FileName: ""}
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.WriteHeader(http.StatusOK)
@@ -111,7 +107,7 @@ func GeneratePatch(w http.ResponseWriter, r *http.Request) {
 		OutputJSON(w, 0, err.Error(), nil)
 		return
 	}
-	OutputJSON(w, 0, "生成成功，维护状态已取消", nil)
+	OutputJSON(w, 0, "生成成功，111111111维护状态已取消", nil)
 	singleton.Instance().SetMaintenanceStatus(false)
 }
 
@@ -138,16 +134,6 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		apkNameString := r.FormValue("apk_name")
 		versionID := r.FormValue("version_num")
 
-		pwd, _ := os.Getwd()
-		path := pwd + string(os.PathSeparator) + constantPathTempapk
-
-		fmt.Println(path)
-		if isDirectoryEmpty(path) == false {
-			OutputJSON(w, 0, "临时目录非空 执行diff操作之后可以上传", nil)
-			return
-		}
-		fmt.Println(path)
-
 		if apkNameString == "" || versionID == "" {
 			OutputJSON(w, 0, "检查包名或者版本号", nil)
 			return
@@ -156,23 +142,14 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		//这里有问题 要改成order by 查找最大版本号与当前版本号进行大小比对
 		var array, _ = UpdateRecord(apkNameString)
 
-		utillog.Instance().Info(len(array))
-
-		if len(array) > 0 {
-			oldVersion, err := strconv.ParseInt(array[0].VersionID, 10, 64)
-			if err != nil {
-
-			}
-			newVersion, err := strconv.ParseInt(versionID, 10, 64)
-			if err != nil {
-
-			}
-			if oldVersion >= newVersion {
-				OutputJSON(w, 0, "版本号需高于当前版本号，请检查版本号", nil)
-				return
-			}
+		if len(array) > 0 && strings.Compare(array[0].Version_id, versionID) >= 0 {
+			OutputJSON(w, 0, "版本号需高于当前版本号，请检查版本号", nil)
+			return
 		}
+		pwd, _ := os.Getwd()
+		path := pwd + string(os.PathSeparator) + constantPathTempapk
 
+		fmt.Println("insert Record path " + path)
 		//get the *fileheaders
 		files := m.File["uploadfile"]
 		fmt.Println(files)
@@ -205,7 +182,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("insert Record")
 		//success read file complete refresha the new versioninfo to db
-		InsertRecord(apkNameString, versionID, r.FormValue("version_name"), r.FormValue("version_content"), "")
+		InsertRecord(apkNameString, versionID, r.FormValue("version_name"), r.FormValue("version_content"))
 
 		OutputJSON(w, 0, "上传完成，请返回上一级界面生成差异", nil)
 
@@ -214,30 +191,10 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//判断目录是否为空
-func isDirectoryEmpty(dirname string) bool {
-
-	f, err := os.Open(dirname)
-	if err != nil {
-		log.Fatal(err)
-	}
-	files, err := f.Readdir(-1)
-	f.Close()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, file := range files {
-		fmt.Println(file.Name())
-	}
-	if len(files) > 0 {
-		return false
-	}
-	return true
-}
-
 //download apk
 func handerGetFile(w http.ResponseWriter, r *http.Request) {
+	// vars := mux.Vars(r)
+	// todoId := vars["todoId"]
 	vars := r.URL.Query()
 	apkName, ok := vars["name"]
 	if !ok {
@@ -250,8 +207,8 @@ func handerGetFile(w http.ResponseWriter, r *http.Request) {
 	var array, ret = UpdateRecord(apkName[0])
 	if len(array) > 0 && ret == true {
 		pwd, _ := os.Getwd()
-		appName := singleton.Instance().GetPackageFullName(array[0].APPName, array[0].VersionID)
-		des := pwd + string(os.PathSeparator) + constantPathVersions + appName
+		// des := pwd + string(os.PathSeparator) + r.URL.Path[1:len(r.URL.Path)]
+		des := pwd + string(os.PathSeparator) + constantPathVersions + array[0].Apk_name + "/" + array[0].Version_id + ".apk"
 		desStat, err := os.Stat(des)
 		if err != nil {
 			http.NotFoundHandler().ServeHTTP(w, r)
@@ -263,7 +220,7 @@ func handerGetFile(w http.ResponseWriter, r *http.Request) {
 				utillog.Instance().Error("Read File Err:", err.Error())
 			} else {
 				w.Header().Set("Content-Type", "application/zip")
-				w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", appName))
+				w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", array[0].Apk_name+".apk"))
 				w.Write(fileData)
 			}
 		}
@@ -287,7 +244,7 @@ func CheckUpdateInfoJSON(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("param a value is [%s]\n", version[0])
 	}
 	if singleton.Instance().GetMaintenanceStatus() == true {
-		emp1 := UpdateInfo{NeedUpdate: false, NeedInstall: false, VersionID: "", VersionName: "", VersionInfo: "", FileSize: 0, FileName: ""}
+		emp1 := UpdateInfo{NeedUpdate: false, NeedInstall: false, VersionId: "", VersionName: "", VersionInfo: "", FileSize: 0, FileName: ""}
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusOK)
 		if err := json.NewEncoder(w).Encode(emp1); err != nil {
@@ -297,45 +254,30 @@ func CheckUpdateInfoJSON(w http.ResponseWriter, r *http.Request) {
 		if len(version) > 0 && len(apkName) > 0 {
 			var array, ret = UpdateRecord(apkName[0])
 			if ret == true && len(array) > 0 {
-				VersionID := array[0].VersionID
-				versionname := array[0].VersionName
-				versioninfo := array[0].VersionInfo
-				appName := singleton.Instance().GetPackageFullName(apkName[0], VersionID)
-				if VersionID == version[0] {
-					emp1 := UpdateInfo{NeedUpdate: false, NeedInstall: false, VersionID: VersionID, VersionName: "", VersionInfo: "", FileSize: 0, FileName: ""}
+				versionid := array[0].Version_id
+				if versionid == version[0] {
+					emp1 := UpdateInfo{NeedUpdate: false, NeedInstall: false, VersionId: versionid, VersionName: "", VersionInfo: "", FileSize: 0, FileName: ""}
 					w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 					w.WriteHeader(http.StatusOK)
 					if err := json.NewEncoder(w).Encode(emp1); err != nil {
 						panic(err)
 					}
 				} else {
-					var needUpdate = false
-					fmt.Println(VersionID)
-					if singleton.Instance().AppIsIos(apkName[0]) {
-						fmt.Println(VersionID)
-						//有更新
-						if len(array) > 0 && strings.Compare(VersionID, version[0]) > 0 {
-							needUpdate = true
-							fmt.Println(VersionID)
-						}
-					}
-					fmt.Println(VersionID)
+					versionname := array[0].Version_name
+					versioninfo := array[0].Version_info
 					//查找文件获取文件信息
 					pwd, _ := os.Getwd()
 					patch := pwd + string(os.PathSeparator) + constantPathPatch
 					newPathName := patch + apkName[0] + string(os.PathSeparator) + version[0] + ".patch"
 					fileInfo, err := os.Stat(newPathName)
-					if needUpdate == true || err != nil { //强制更新 完整包
-						fmt.Println(VersionID)
-						// localfile := pwd + string(os.PathSeparator) + constantPathVersions + apkName[0] + string(os.PathSeparator) + versionid + ".apk"
-						localfile := pwd + string(os.PathSeparator) + constantPathVersions + appName
+					if err != nil { //强制更新 完整包
+						localfile := pwd + string(os.PathSeparator) + constantPathVersions + apkName[0] + string(os.PathSeparator) + versionid + ".apk"
 						fileInfo, err := os.Stat(localfile)
 						if err != nil {
 
 						} else {
-							// fileName := constantPathFileserverVersions + apkName[0] + "/" + versionid + ".apk"
-							fileName := constantPathFileserverVersions + appName
-							emp1 := UpdateInfo{NeedUpdate: true, NeedInstall: true, VersionID: VersionID, VersionName: versionname, VersionInfo: versioninfo, FileSize: fileInfo.Size(), FileName: fileName}
+							fileName := constantPathFileserverVersions + apkName[0] + "/" + versionid + ".apk"
+							emp1 := UpdateInfo{NeedUpdate: true, NeedInstall: true, VersionId: versionid, VersionName: versionname, VersionInfo: versioninfo, FileSize: fileInfo.Size(), FileName: fileName}
 							w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 							w.WriteHeader(http.StatusOK)
 							if err := json.NewEncoder(w).Encode(emp1); err != nil {
@@ -345,20 +287,16 @@ func CheckUpdateInfoJSON(w http.ResponseWriter, r *http.Request) {
 					} else {
 						var size = fileInfo.Size()
 						fileName := constantPathFileserverPatch + apkName[0] + "/" + version[0] + ".patch"
-						emp1 := UpdateInfo{NeedUpdate: true, NeedInstall: false, VersionID: VersionID, VersionName: versionname, VersionInfo: versioninfo, FileSize: size, FileName: fileName}
+						// UpdateInfos := UpdateInfos{
+						// 	UpdateInfo{Needinstall: false, VersionId: versionid, VersionName: versionname, VersionInfo: versioninfo, FileSize: size, FileName: fileName},
+						// }
+						emp1 := UpdateInfo{NeedUpdate: true, NeedInstall: false, VersionId: versionid, VersionName: versionname, VersionInfo: versioninfo, FileSize: size, FileName: fileName}
 						w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 						w.WriteHeader(http.StatusOK)
 						if err := json.NewEncoder(w).Encode(emp1); err != nil {
 							panic(err)
 						}
 					}
-				}
-			} else {
-				emp1 := UpdateInfo{NeedUpdate: false, NeedInstall: false, VersionID: "", VersionName: "", VersionInfo: "", FileSize: 0, FileName: ""}
-				w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-				w.WriteHeader(http.StatusOK)
-				if err := json.NewEncoder(w).Encode(emp1); err != nil {
-					panic(err)
 				}
 			}
 

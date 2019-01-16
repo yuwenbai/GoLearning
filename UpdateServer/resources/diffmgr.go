@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -10,7 +9,6 @@ import (
 	"strings"
 	"sync"
 
-	"./singleton"
 	"./utillog"
 )
 
@@ -25,6 +23,7 @@ func DoDiffApk() error {
 		if f.IsDir() {
 			return nil
 		}
+		println(fileNamePath)
 		apknamenosuffix := getFileNameNoSuffix(fileNamePath)
 		spkname, version := splitApkName(apknamenosuffix)
 		DiffApk(fileNamePath, spkname, version)
@@ -38,7 +37,7 @@ func DoDiffApk() error {
 }
 
 //DiffApk 差异对比
-func DiffApk(src, apkName, versionID string) error {
+func DiffApk(src, apkName, versionName string) error {
 	pwd, _ := os.Getwd()
 	srcPatchPath := pwd + string(os.PathSeparator) + constantPathPatch + apkName + "/"
 	srcVersionPath := pwd + string(os.PathSeparator) + constantPathVersions + apkName + "/"
@@ -53,71 +52,46 @@ func DiffApk(src, apkName, versionID string) error {
 		fmt.Println(err)
 	}
 
-	if singleton.Instance().AppIsIos(apkName) {
-		appName := singleton.Instance().GetPackageFullName(apkName, versionID)
-		iosSrcVersionPath := pwd + string(os.PathSeparator) + constantPathVersions
-		err = os.Rename(src, iosSrcVersionPath+appName)
-		if err != nil {
-			fmt.Printf("rename failed %v\n", err)
+	lock := &sync.Mutex{}
+	var wg sync.WaitGroup
+	err = filepath.Walk(srcVersionPath, func(filename string, f os.FileInfo, err error) error {
+		if f == nil {
+			return err
 		}
-	} else {
-		lock := &sync.Mutex{}
-		var wg sync.WaitGroup
-		err = filepath.Walk(srcVersionPath, func(filename string, f os.FileInfo, err error) error {
-			if f == nil {
-				return err
-			}
-			if f.IsDir() {
-				return nil
-			}
-			fmt.Println("FILE: " + filename)
-			filenameOnly := getFileNameNoSuffix(filename)
-			newPathName := srcPatchPath + filenameOnly + ".patch"
-
-			wg.Add(1)
-			go func(oldFileName, newFileName, generateFileWithPath string) {
-				defer wg.Done()
-				lock.Lock()
-				utillog.Instance().Info("oldFileName " + oldFileName + " newFileName " + newFileName + " generateFileWithPath " + generateFileWithPath)
-				var execmd = exec.Command("bsdiff-win.exe", oldFileName, newFileName, generateFileWithPath)
-
-				var out bytes.Buffer
-				var stderr bytes.Buffer
-				execmd.Stdout = &out
-				execmd.Stderr = &stderr
-				err := execmd.Run()
-				if err != nil {
-					fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
-					return
-				}
-				fmt.Println("Result: " + out.String())
-
-				// output, err := execmd.CombinedOutput()
-				// if err != nil {
-				// 	fmt.Println(fmt.Sprint(err) + ": " + string(output))
-				// 	utillog.Instance().Info(output)
-				// 	utillog.Instance().Info(err)
-				// 	utillog.Instance().Fatal(err)
-				// 	return
-				// }
-				// fmt.Println(string(output))
-
-				lock.Unlock()
-			}(filename, src, newPathName)
-
+		if f.IsDir() {
 			return nil
-		})
-
-		wg.Wait()
-
-		if err != nil {
-			fmt.Printf("filepath.Walk() returned %v\n", err)
 		}
-		err = os.Rename(src, srcVersionPath+versionID+".apk")
-		if err != nil {
-			fmt.Printf("rename failed %v\n", err)
-		}
+		fmt.Println("FILE: " + filename)
+		filenameOnly := getFileNameNoSuffix(filename)
+		newPathName := srcPatchPath + filenameOnly + ".patch"
+
+		// var execmd = exec.Command("bsdiff-win.exe", filename, src, newPathName)
+		// exeerr := execmd.Run()
+		// if exeerr != nil {
+		// 	utillog.Instance().Fatal(exeerr)
+		// }
+
+		wg.Add(1)
+		go func(oldFileName, newFileName, generateFileWithPath string) {
+			defer wg.Done()
+			lock.Lock()
+			var execmd = exec.Command("bsdiff-win.exe", oldFileName, newFileName, generateFileWithPath)
+			exeerr := execmd.Run()
+			if exeerr != nil {
+				utillog.Instance().Fatal(exeerr)
+			}
+			lock.Unlock()
+		}(filename, src, newPathName)
+
+		return nil
+	})
+
+	wg.Wait()
+
+	if err != nil {
+		fmt.Printf("filepath.Walk() returned %v\n", err)
 	}
+	err = os.Rename(src, srcVersionPath+versionName+".apk")
 	return nil
 }
 
