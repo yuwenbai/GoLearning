@@ -5,7 +5,7 @@ RN_LearnProj   https://github.com/DaiYz/react-native-mobx-init 在这位前辈�
 
 ## Example List
 - [grpc](/grpc/src)
-操作 grpc
+## 操作 grpc
 grpc-gateway  
 编译 proto的时候 需要 import "google/api/annotations.proto"; 这时候有一个坑 当时我的protoc是下载二进制然后偷懒直接copy  二进制文件到go的目录下 没有配置环境变量
 编译annotations的时候就会出问题 后来还是规规矩矩配置环境变量 ok protoc -I resources/customer -I%GOPATH%\src\github.com\grpc-ecosystem\grpc-gateway\third_party\googleapis resources/customer/customer.proto --go_out=plugins=grpc:resources/customer/
