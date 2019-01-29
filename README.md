@@ -6,7 +6,7 @@ RN_LearnProj   https://github.com/DaiYz/react-native-mobx-init 在这位前辈�
 ## Example List
 - [updateserver](/UpdateServer)
 - [grpc](/grpc/src)
-- [micro](/micro/src)
+- [micro](/micro/)
 
 ## 操作 grpc
 grpc-gateway  
