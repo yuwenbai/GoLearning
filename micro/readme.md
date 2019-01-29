@@ -1,0 +1,1 @@
+参考这篇文章 http://www.hrefs.cn/article/go-micro-with-consul-quickstart
