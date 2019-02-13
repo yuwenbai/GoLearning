@@ -11,8 +11,10 @@ import (
 	"github.com/micro/go-micro/registry/consul"
 )
 
+//Greeter ff
 type Greeter struct{}
 
+//SayHello ff
 func (s *Greeter) SayHello(ctx context.Context, req *proto.HelloRequest, rsp *proto.HelloReply) error {
 	rsp.Message = "Hello " + req.Name
 	return nil
