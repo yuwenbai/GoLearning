@@ -128,7 +128,7 @@ func GeneratePatch(w http.ResponseWriter, r *http.Request) {
 }
 
 //receiver apk
-func uploadHandler(w http.ResponseWriter, r *http.Request) {
+func uploadAndroidHandler(w http.ResponseWriter, r *http.Request) {
 	utillog.Instance().Info(r.Method)
 	switch r.Method {
 	//POST takes the uploaded file(s) and saves it to disk.
@@ -226,7 +226,110 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		//success read file complete refresha the new versioninfo to db
 		InsertRecord(apkNameString, versionID, r.FormValue("version_name"), r.FormValue("version_content"), "")
 
-		OutputJSON(w, 0, "上传完成，请返回上一级界面生成差异", nil)
+		OutputJSON(w, 0, "上传完成 android !", nil)
+
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+//receiver ipa
+func uploadIOSHandler(w http.ResponseWriter, r *http.Request) {
+	utillog.Instance().Info(r.Method)
+	switch r.Method {
+	//POST takes the uploaded file(s) and saves it to disk.
+	case "POST":
+		//parse the multipart form in the request
+		err := r.ParseMultipartForm(100000)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		secretKey := r.FormValue("secret_key")
+		if secretKey != singleton.Instance().GetSecretKey() {
+			OutputJSON(w, 0, "口令！", nil)
+			return
+		}
+
+		//get a ref to the parsed multipart form
+		m := r.MultipartForm
+
+		apkNameString := r.FormValue("apk_name")
+		versionID := r.FormValue("version_num")
+
+		pwd, _ := os.Getwd()
+		path := pwd + string(os.PathSeparator) + constantPathVersions + apkNameString + "/"
+
+		if apkNameString == "" || versionID == "" {
+			OutputJSON(w, 0, "检查包名或者版本号", nil)
+			return
+		}
+
+		//这里有问题 要改成order by 查找最大版本号与当前版本号进行大小比对
+		var array, _ = UpdateRecord(apkNameString)
+
+		utillog.Instance().Info(len(array))
+
+		if len(array) > 0 {
+			oldVersion, err := strconv.ParseInt(array[0].VersionID, 10, 64)
+			if err != nil {
+
+			}
+			newVersion, err := strconv.ParseInt(versionID, 10, 64)
+			if err != nil {
+
+			}
+			if oldVersion >= newVersion {
+				OutputJSON(w, 0, "版本号需高于当前版本号，请检查版本号", nil)
+				return
+			}
+		}
+
+		//get the *fileheaders
+		files := m.File["uploadfile"]
+		fmt.Println(files)
+		for i := range files {
+			//for each fileheader, get a handle to the actual file
+			file, err := files[i].Open()
+			defer file.Close()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			//create destination file making sure the path is writeable.
+			//@eg: apkNameString + "_" + versionID "xxxxname_111"
+
+			var filepath = path + apkNameString + "_" + versionID + ".ipa"
+			fmt.Println(filepath)
+			dst, err := os.Create(filepath)
+			defer dst.Close()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			//copy the uploaded file to the destination file
+			if _, err := io.Copy(dst, file); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		err = DoModifyPlist(versionID)
+		if err != nil {
+			fmt.Println(versionID)
+			// 	OutputJSON(w, 0, "生成成功，维护状态已取消 修改plist 失败 修改plist 失败 修改plist 失败 ", nil)
+		} else {
+			// 	OutputJSON(w, 0, "生成成功，维护状态已取消", nil)
+		}
+
+		singleton.Instance().SetMaintenanceStatus(true)
+
+		fmt.Println("insert Record")
+		//success read file complete refresha the new versioninfo to db
+		InsertRecord(apkNameString, versionID, r.FormValue("version_name"), r.FormValue("version_content"), "")
+
+		OutputJSON(w, 0, "上传完成 ios!", nil)
 
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)

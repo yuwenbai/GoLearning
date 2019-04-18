@@ -53,15 +53,21 @@ var routes = Routes{
 		TodoCreate,
 	},
 	Route{
-		"uploadHandler",
-		"POST",
-		"/upload",
-		uploadHandler,
-	},
-	Route{
 		"CheckUpdateInfoJson",
 		"GET",
 		"/CheckUpdateInfoJson",
 		CheckUpdateInfoJSON,
+	},
+	Route{
+		"uploadIOSHandler",
+		"POST",
+		"/uploadIOS",
+		uploadIOSHandler,
+	},
+	Route{
+		"uploadAndroidHandler",
+		"POST",
+		"/uploadAndroid",
+		uploadAndroidHandler,
 	},
 }

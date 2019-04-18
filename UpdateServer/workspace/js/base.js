@@ -26,9 +26,14 @@ $("#History_btn").click(function(event){
     event.preventDefault();
 })
 //点击上传跳转
-$("#upload_btn").click(function(event){
+$("#upload_btn_IOS").click(function(event){
     event.preventDefault();
-    window.location.href = "/static/html/admin/index.html";
+    window.location.href = "/static/html/admin/index_ios.html";
+})
+//点击上传跳转
+$("#upload_btn_ANDROID").click(function(event){
+    event.preventDefault();
+    window.location.href = "/static/html/admin/index_android.html";
 })
 function GetPackageNames()
 {

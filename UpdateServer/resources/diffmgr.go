@@ -162,10 +162,10 @@ func DoModifyPlist(version string) error {
 	fmt.Println(d)
 	tFile := d + string(os.PathSeparator) + "workspace/versions/script.py"
 
-	verURL := "https://update.microcontract.io/static/versions/bo-ios/" + version + ".ipa"
+	verURL := version + ".ipa"
 
 	fmt.Println(tFile)
-	cmd := exec.Command("python",tFile, verURL)
+	cmd := exec.Command("python", tFile, verURL)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
