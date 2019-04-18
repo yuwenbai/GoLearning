@@ -2,17 +2,19 @@ package main
 
 import "time"
 
+//Todo test
 type Todo struct {
 	Name      string    `json:"name"`
 	Completed bool      `json:"completed"`
 	Due       time.Time `json:"due"`
 }
 
+//Todos test
 type Todos []Todo
 
 //UpdateInfo 信息实例
 type UpdateInfo struct {
-	VersionId   string `json:"VersionId"`
+	VersionID   string `json:"VersionId"`
 	VersionName string `json:"VersionName"`
 	VersionInfo string `json:"VersionInfo"`
 	FileSize    int64  `json:"FileSize"`

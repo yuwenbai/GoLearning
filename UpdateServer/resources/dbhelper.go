@@ -3,65 +3,84 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 
 	"./utillog"
-	_ "github.com/denisenkom/go-mssqldb"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 //UpdateVersion 版本更新相关信息
 type UpdateVersion struct {
-	Apk_name     string
-	Version_id   string
-	Version_name string
-	Version_info string
-	Version_time string
+	APPName     string
+	VersionID   string
+	VersionName string
+	VersionInfo string
+	VersionTime string
 }
 
 //InsertRecord 插入记录
-func InsertRecord(ApkName, VersionID, VersionName, VersionInfo string) bool {
+func InsertRecord(ApkName, VersionID, VersionName, VersionInfo, PackageType string) bool {
+	// username: root; password: 123456; database: test
+	// db, err := sql.Open("mysql", "root:111111@/updatateserverdb")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer db.Close()
 
 	var connString, err = GenerateConnectSQLDB()
 	if err != nil {
 		utillog.Instance().Fatal("GenerateConnectSQLDB failed:", err.Error())
 	}
-	//建立连接
-	conn, err := sql.Open("mssql", connString)
-	if err != nil {
-		utillog.Instance().Fatal("Open Connection failed:", err.Error())
-	}
-	defer conn.Close()
 
-	cmd := fmt.Sprintf("INSERT INTO %s (ApkName, VersionId, VersionName, VersionInfo, CreatedOn) VALUES ('%s',  '%s', '%s', '%s', '%s')", "dbo.UpdateServerDB_Version", ApkName, VersionID, VersionName, VersionInfo, time.Now().Format("2006-01-02 15:04:05"))
-	err = exeSQL(conn, cmd)
+	db, err := sql.Open("mysql", connString)
 	if err != nil {
-		utillog.Instance().Fatal(err.Error())
-		return false
+		log.Fatal(err)
 	}
+	defer db.Close()
+
+	// 创建
+
+	cmd := fmt.Sprintf("INSERT INTO %s (ApkName, VersionID, VersionName, VersionInfo, CreatedOn) VALUES ('%s',  '%s', '%s', '%s', '%s')", "UpdateServerDB_Version", ApkName, VersionID, VersionName, VersionInfo, time.Now().Format("2006-01-02 15:04:05"))
+	ret, err := db.Exec(cmd)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(ret.RowsAffected()) //更新的条目数
 	return true
 }
 
 //LookUpGroupBy 获取所有表名
 func LookUpGroupBy(columnName string) []string {
+	// db, err := sql.Open("mysql", "root:111111@/updatateserverdb")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer db.Close()
 
 	var connString, err = GenerateConnectSQLDB()
 	if err != nil {
 		utillog.Instance().Fatal("GenerateConnectSQLDB failed:", err.Error())
 	}
-	//建立连接
-	conn, err := sql.Open("mssql", connString)
+
+	db, err := sql.Open("mysql", connString)
 	if err != nil {
-		utillog.Instance().Fatal("Open Connection failed:", err.Error())
+		log.Fatal(err)
 	}
-	defer conn.Close()
-	// cmd := fmt.Sprintf("select '%s' from %s group by %s", columnName, "dbo.UpdateServerDB_Version", columnName)
-	// cmd := fmt.Sprintf("select %s from %s group by %s", columnName, "dbo.UpdateServerDB_Version", columnName)
-	cmd := fmt.Sprintf("select distinct %s from %s", columnName, "dbo.UpdateServerDB_Version")
-	rows, err := conn.Query(cmd)
+	defer db.Close()
+
+	cmd := fmt.Sprintf("select distinct %s from %s", columnName, "UpdateServerDB_Version")
+	rows, err := db.Query(cmd)
+
 	if err != nil {
-		utillog.Instance().Fatal(err.Error())
+		log.Fatal(err)
 	}
-	//遍历每一行
+	defer rows.Close()
+
+	// cloumns, err := rows.Columns()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	var strdata = make([]string, 0)
 
@@ -99,6 +118,7 @@ func LookUpGroupBy(columnName string) []string {
 		strdata = append(strdata, tempvalue)
 	}
 	return strdata
+
 }
 
 //GenerateConnectSQLDB 连接数据库
@@ -119,102 +139,42 @@ func GenerateConnectSQLDB() (string, error) {
 	var database = cdbname
 
 	//连接字符串
-	connString := fmt.Sprintf("server=%s;port=%s;database=%s;user id=%s;password=%s", server, port, database, user, password)
+	// "root:123456@tcp(192.168.2.225:3306)/dbname?charset=utf8"
+	connString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8", user, password, server, port, database)
+	// connString := "root:111111@tcp(127.0.0.1:3306)/updateserverdb?charset=utf8"
 	return connString, nil
+
 }
 
 //UpdateRecord 更新数据库 获取对应包名所有信息 按versionId排序
 func UpdateRecord(apkName string) ([]*UpdateVersion, bool) {
 
 	var connString, err = GenerateConnectSQLDB()
+
+	fmt.Println(connString)
 	if err != nil {
 		utillog.Instance().Fatal("GenerateConnectSQLDB failed:", err.Error())
 	}
-	//建立连接
-	conn, err := sql.Open("mssql", connString)
-	if err != nil {
-		utillog.Instance().Fatal("Open Connection failed:", err.Error())
-	}
-	defer conn.Close()
 
-	cmd := fmt.Sprintf("SELECT * FROM %s where ApkName='%s' ORDER BY VersionId desc", "dbo.UpdateServerDB_Version", apkName)
-	var sqlArray, err1 = exeUpdateSQL(conn, cmd)
+	db, err := sql.Open("mysql", connString)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	// cmd := fmt.Sprintf("SELECT * FROM %s where ApkName='%s' ORDER BY right ('0000000000'+VersionID,10) desc", "UpdateServerDB_Version", apkName)
+	cmd := fmt.Sprintf("SELECT * FROM %s where ApkName='%s' ORDER BY VersionID+0 desc", "UpdateServerDB_Version", apkName)
+	var sqlArray, err1 = exeUpdateSQL(db, cmd)
+
+	for index, item := range sqlArray {
+		fmt.Println(index)
+		fmt.Println(item)
+	}
 	if err1 != nil {
 		utillog.Instance().Fatal("failed:", err1.Error())
 		return nil, false
 	}
-	fmt.Println(sqlArray)
 	return sqlArray, true
-}
-
-// //LookUpAllDBInfo 获取所有数据
-// func LookUpAllDBInfo(apkName string) ([]*UpdateVersion, bool) {
-
-// 	var connString, err = GenerateConnectSQLDB()
-// 	if err != nil {
-// 		utillog.Instance().Fatal("GenerateConnectSQLDB failed:", err.Error())
-// 	}
-// 	//建立连接
-// 	conn, err := sql.Open("mssql", connString)
-// 	if err != nil {
-// 		utillog.Instance().Fatal("Open Connection failed:", err.Error())
-// 	}
-// 	defer conn.Close()
-
-// 	cmd := fmt.Sprintf("SELECT * FROM %s where ApkName='%s' ORDER BY CreatedOn desc", "dbo.UpdateServerDB_Version", apkName)
-// 	var sqlArray, err1 = exeUpdateSQL(conn, cmd)
-// 	if err1 != nil {
-// 		utillog.Instance().Fatal("failed:", err1.Error())
-// 		return nil, false
-// 	}
-// 	fmt.Println(sqlArray)
-// 	return sqlArray, true
-// }
-
-//exeSQL 执行sql语句
-func exeSQL(db *sql.DB, cmd string) error {
-	rows, err := db.Query(cmd)
-	if err != nil {
-		utillog.Instance().Fatal("failed:", err.Error())
-		return err
-	}
-	defer rows.Close()
-	cols, err := rows.Columns()
-	if err != nil {
-		utillog.Instance().Fatal("failed:", err.Error())
-		return err
-	}
-	if cols == nil {
-		return nil
-	}
-	vals := make([]interface{}, len(cols))
-	for i := 0; i < len(cols); i++ {
-		vals[i] = new(interface{})
-		if i != 0 {
-			fmt.Print("\t")
-		}
-		fmt.Print(cols[i])
-	}
-	fmt.Println()
-	for rows.Next() {
-		err = rows.Scan(vals...)
-		if err != nil {
-			utillog.Instance().Fatal("failed:", err.Error())
-			continue
-		}
-		for i := 0; i < len(vals); i++ {
-			if i != 0 {
-				fmt.Print("\t")
-			}
-			printValue(vals[i].(*interface{}))
-		}
-		fmt.Println()
-
-	}
-	if rows.Err() != nil {
-		return rows.Err()
-	}
-	return nil
 }
 
 func exeUpdateSQL(db *sql.DB, cmd string) ([]*UpdateVersion, error) {
@@ -229,40 +189,10 @@ func exeUpdateSQL(db *sql.DB, cmd string) ([]*UpdateVersion, error) {
 	//遍历每一行
 	for rows.Next() {
 		var row = new(UpdateVersion)
-		rows.Scan(&row.Apk_name, &row.Version_id, &row.Version_name, &row.Version_info, &row.Version_time)
+		rows.Scan(&row.APPName, &row.VersionID, &row.VersionName, &row.VersionInfo, &row.VersionTime)
 		retRowData = append(retRowData, row)
 	}
-	// cols, err := rows.Columns()
-	// if err != nil {
-	// 	return err
-	// }
-	// if cols == nil {
-	// 	return nil
-	// }
-	// vals := make([]interface{}, len(cols))
-	// for i := 0; i < len(cols); i++ {
-	// 	vals[i] = new(interface{})
-	// 	if i != 0 {
-	// 		fmt.Print("\t")
-	// 	}
-	// 	fmt.Print(cols[i])
-	// }
-	// fmt.Println()
-	// for rows.Next() {
-	// 	err = rows.Scan(vals...)
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 		continue
-	// 	}
-	// 	for i := 0; i < len(vals); i++ {
-	// 		if i != 0 {
-	// 			fmt.Print("\t")
-	// 		}
-	// 		printValue(vals[i].(*interface{}))
-	// 	}
-	// 	fmt.Println()
 
-	// }
 	if rows.Err() != nil {
 		return retRowData, rows.Err()
 	}

@@ -58,7 +58,7 @@ function GetUserBindInfo(version)
 		{
 			var tempdata = data
 			console.log("GetUserBindInfo-->" + data)
-			$("#late_version_num").text(tempdata.VersionID)
+			$("#late_version_num").text(tempdata.VersionId)
 			$("#late_version_name").text(tempdata.VersionName)
 			$("#late_version_content").text(tempdata.VersionInfo)
 		}

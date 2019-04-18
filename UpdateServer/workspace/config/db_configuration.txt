@@ -1,5 +1,6 @@
-host=192.168.1.169
-port=1433
-user=sa
-password=123
-dbname=UpdateServerDB
+host=127.0.0.1
+port=3306
+user=root
+password=11111111
+dbname=updateserverdb
+ipaname=itms-services://?action=download-manifest&url=https://update.microcontract.io:443/static/versions/manifest.plist

@@ -18,13 +18,14 @@
   
   <head>
     <title>上传文件</title>
-	<script type="application/javascript" src="/static/js/jquery.js" ></script>
+  <script type="application/javascript" src="/static/js/jquery.js" ></script>
+  <script type="application/javascript" src="/static/js/jquery-form.js" ></script>
   </head>
   <body>
   <table>
 
 </table>
-    <form enctype="multipart/form-data" action="/upload" method="post">
+    <form id="saveReportForm" enctype="multipart/form-data" action="/upload" method="post" onsubmit="return saveReport();"> 
       <input type="file" name="uploadfile" />
       <input type="hidden" name="token" value="{...{.}...}" />
       <input type="submit" value="上传" /><br>
@@ -42,7 +43,10 @@
 		<br>
 		<tr>
 		<td>更新内容:</td><td><input type="text" name="version_content"></input></td>
-		</tr>
+        </tr>
+        <tr>
+        <td>秘钥:</td><td><input type="text" name="secret_key"></input></td>
+        </tr>
 		<br>
 	  </form>
       <button id="DiffPackage_btn">生成差异</button> 
